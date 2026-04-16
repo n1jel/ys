@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "273013664804",
+    "project_id": "your-season-2094e",
+    "storage_bucket": "your-season-2094e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:273013664804:android:c3eb6a04cc8b2749f2bcb1",
+        "android_client_info": {
+          "package_name": "com.yourseason"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "273013664804-4e2dtpge86284bgg83iifgljosoi6e43.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAbImT5ZZN6A-YDHnLhnH6rb4hIQkIV28"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "273013664804-4e2dtpge86284bgg83iifgljosoi6e43.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "273013664804-pccj433b05ojujsd22bcn2qghaujvmd9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.reactjs.native.example.YourSeason"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:273013664804:android:f07f76a72366dca4f2bcb1",
+        "android_client_info": {
+          "package_name": "org.solidappmaker.YourSeason"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "273013664804-4e2dtpge86284bgg83iifgljosoi6e43.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAbImT5ZZN6A-YDHnLhnH6rb4hIQkIV28"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "273013664804-4e2dtpge86284bgg83iifgljosoi6e43.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "273013664804-pccj433b05ojujsd22bcn2qghaujvmd9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.reactjs.native.example.YourSeason"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
