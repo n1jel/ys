@@ -1,0 +1,182 @@
+package com.yourseason.updatecollection;
+
+import android.content.Context;
+import android.os.Build;
+import android.os.Handler;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
+import java.util.Objects;
+
+public class UpdateCollectionDragSelectTouchListener implements RecyclerView.OnItemTouchListener {
+
+    private static final long LONG_PRESS_THRESHOLD = 500;
+    public static final int AUTO_SCROLL_TRIGGER_ZONE_SIZE = 300; // Adjust this value as needed
+    public static final long AUTO_SCROLL_DELAY = 5; // Delay between auto-scroll steps
+    public static final int AUTO_SCROLL_SPEED = 250; // Speed of auto-scroll in pixels
+    public static final int AUTO_SCROLL_EDGE_THRESHOLD = 80; // Threshold from RecyclerView edge to trigger auto-scroll
+
+    private final RecyclerView recyclerView;
+    private final UpdateCollectionSelectDselectImage selectDselectImage;
+    private final Context context;
+    private final List<UpdateCollectionData.UpdateCollectionDatum> photos;
+    private final UpdateCollectionAdapter adapter;
+    private final Handler autoScrollHandler = new Handler();
+    private boolean isDragging = false;
+    private int initialPosition = RecyclerView.NO_POSITION;
+    private int lastSelectedPosition = RecyclerView.NO_POSITION;
+
+    public UpdateCollectionDragSelectTouchListener(RecyclerView recyclerView, UpdateCollectionSelectDselectImage selectDselectImage, Context context, List<UpdateCollectionData.UpdateCollectionDatum> photos, UpdateCollectionAdapter adapter) {
+        this.recyclerView = recyclerView;
+        this.selectDselectImage = selectDselectImage;
+        this.context = context;
+        this.photos = photos;
+        this.adapter = adapter;
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+        switch (e.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                handleActionDown(e);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                handleActionMove(e);
+                break;
+            case MotionEvent.ACTION_UP:
+                handleActionUp();
+                break;
+        }
+        return false;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void handleActionDown(MotionEvent e) {
+        initialPosition = getItemPositionUnder(e.getX(), e.getY());
+        isDragging = true;
+        handleDragSelection(initialPosition);
+        if (e.getY() > recyclerView.getHeight() - AUTO_SCROLL_TRIGGER_ZONE_SIZE) {
+            startAutoScroll();
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void handleActionMove(MotionEvent e) {
+        if (isDragging) {
+            int position = getItemPositionUnder(e.getX(), e.getY());
+            handleDragSelection(position);
+            checkAutoScroll(e.getRawY());
+        }
+    }
+
+    private void handleActionUp() {
+        isDragging = false;
+        lastSelectedPosition = RecyclerView.NO_POSITION;
+        initialPosition = RecyclerView.NO_POSITION;
+        stopAutoScroll();
+    }
+
+    @Override
+    public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+        // Not needed for now
+    }
+
+    @Override
+    public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+        // Not needed for now
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void handleDragSelection(int position) {
+
+        /*ye  check krne ke liye lgya hu ki koi image selected hai ya nahi*/
+        boolean isOneSelected = adapter.photos.stream().anyMatch(UpdateCollectionData.UpdateCollectionDatum::isSelected);
+
+        if (isOneSelected) {
+            try {
+                if (position != RecyclerView.NO_POSITION && position != lastSelectedPosition) {
+                    int start = Math.min(initialPosition, position);
+                    int end = Math.max(initialPosition, position);
+                    for (int i = start; i <= end; i++) {
+                        boolean shouldBeSelected = (i >= start && i <= end);
+                        UpdateCollectionData.UpdateCollectionDatum photo = photos.get(i);
+                        if(photo.getalreadyIsSelected()==0){
+                            if (photo != null && photo.isSelected() != shouldBeSelected) {
+                                photo.setSelected(shouldBeSelected);
+                                if (shouldBeSelected) {
+                                    if (photo.getalreadyIsSelected() == 0) {
+                                        selectDselectImage.selectImage(photo);
+                                    }
+
+                                } else {
+                                    if (photo.getalreadyIsSelected() == 0) {
+                                        selectDselectImage.dselectImage(photo);
+                                    }
+                                }
+                                adapter.notifyItemChanged(i);
+                            }
+                        }
+
+                    }
+                    lastSelectedPosition = position;
+                }
+            } catch (Exception e) {
+                Log.w("RUNNING IN CATCH", Objects.requireNonNull(e.getMessage()));
+            }
+        }
+
+    }
+
+    private void startAutoScroll() {
+        autoScrollHandler.postDelayed(autoScrollRunnable, AUTO_SCROLL_DELAY);
+    }
+
+    private void stopAutoScroll() {
+        autoScrollHandler.removeCallbacks(autoScrollRunnable);
+    }
+
+    private void checkAutoScroll(float rawY) {
+        int scrollOffset = calculateAutoScrollOffset(rawY);
+        recyclerView.scrollBy(0, scrollOffset);
+    }
+
+    private int calculateAutoScrollOffset(float rawY) {
+        int recyclerViewHeight = recyclerView.getHeight();
+        int triggerZoneSize = AUTO_SCROLL_EDGE_THRESHOLD;
+        int scrollZoneSize = AUTO_SCROLL_EDGE_THRESHOLD * 2;
+        int scrollSpeed = AUTO_SCROLL_SPEED;
+
+        if (rawY < triggerZoneSize) {
+            return -scrollSpeed;
+        } else if (rawY > recyclerViewHeight - triggerZoneSize) {
+            return scrollSpeed;
+        } else if (rawY < scrollZoneSize) {
+            return (int) (-scrollSpeed * (scrollZoneSize - rawY) / scrollZoneSize);
+        } else if (rawY > recyclerViewHeight - scrollZoneSize) {
+            return (int) (scrollSpeed * (rawY - (recyclerViewHeight - scrollZoneSize)) / scrollZoneSize);
+        } else {
+            return 0;
+        }
+    }
+
+    private int getItemPositionUnder(float x, float y) {
+        View child = recyclerView.findChildViewUnder(x, y);
+        return child != null ? recyclerView.getChildAdapterPosition(child) : RecyclerView.NO_POSITION;
+    }
+
+    private final Runnable autoScrollRunnable = new Runnable() {
+        @Override
+        public void run() {
+            recyclerView.scrollBy(0, AUTO_SCROLL_SPEED);
+            autoScrollHandler.postDelayed(this, AUTO_SCROLL_DELAY);
+        }
+    };
+}
